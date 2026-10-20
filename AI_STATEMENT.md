@@ -47,3 +47,10 @@ The same request, split into separate prompts and rephrased:
 - **Prompt:** "Write an email to my three teammates with the repository link, asking for their GitHub usernames so they can be added as collaborators."
 - **Generated:** an email draft (reviewed and sent by Guillermo).
 - **Team changes and verification:** none.
+
+### 5. Divide the lab into phases and branches
+- **Date / member / tool:** 20 Oct 2026 · Guillermo García · Claude Code (Claude Opus 5.5)
+- **Original prompt (verbatim):** "voy a dividirlo en fases, y vamos a dividir el trabajo en ramas una para cada persona" / "dividelo en fases. apunta los prompts de cada fase como si fuesen mios"
+- **Prompt (rephrased):** "Divide the lab into phases following the Lab 1 Project Guidelines and create one feature branch per team member, with the files and lab questions each one owns, the function signatures we share, and for each phase the prompt I will use with the AI assistant."
+- **Generated:** `PLAN.md` (branches, owners, shared signatures, phases with deadlines and one prompt per phase) and the four branches `feature/bitwise-enumeration`, `feature/log-combinatorics`, `feature/thermodynamics`, `feature/latex-report`. No physics or algorithm code.
+- **Team changes and verification:** owners can be swapped in `PLAN.md`. The phase prompts in `PLAN.md` are logged here, with what they generated, only when someone actually uses them.
