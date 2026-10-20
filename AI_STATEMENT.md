@@ -48,9 +48,23 @@ The same request, split into separate prompts and rephrased:
 - **Generated:** an email draft (reviewed and sent by Guillermo).
 - **Team changes and verification:** none.
 
-### 5. Divide the lab into phases and branches
+### 5. Divide the lab into phases
 - **Date / member / tool:** 20 Oct 2026 · Guillermo García · Claude Code (Claude Opus 5.5)
-- **Original prompt (verbatim):** "voy a dividirlo en fases, y vamos a dividir el trabajo en ramas una para cada persona" / "dividelo en fases. apunta los prompts de cada fase como si fuesen mios"
-- **Prompt (rephrased):** "Divide the lab into phases following the Lab 1 Project Guidelines and create one feature branch per team member, with the files and lab questions each one owns, the function signatures we share, and for each phase the prompt I will use with the AI assistant."
-- **Generated:** `PLAN.md` (branches, owners, shared signatures, phases with deadlines and one prompt per phase) and the four branches `feature/bitwise-enumeration`, `feature/log-combinatorics`, `feature/thermodynamics`, `feature/latex-report`. No physics or algorithm code.
-- **Team changes and verification:** owners can be swapped in `PLAN.md`. The phase prompts in `PLAN.md` are logged here, with what they generated, only when someone actually uses them.
+- **Original prompt (verbatim):** "voy a dividirlo en fases" / "dividelo en fases"
+- **Prompt (rephrased):** "Divide the lab into phases following the Lab 1 Project Guidelines and the lab manual: what each phase does, which lab questions it answers, which files it owns, its deadline, and the function signatures the phases share."
+- **Generated:** `PLAN.md` (phase table with dependencies and deadlines, shared signatures, task of each phase quoting the manual's questions). No physics or algorithm code.
+- **Team changes and verification:** the split into phases was the team's idea; we checked every lab question (Part 1 a–e, Part 2 a–k) is covered by exactly one phase.
+
+### 6. One branch per member
+- **Date / member / tool:** 20 Oct 2026 · Guillermo García · Claude Code (Claude Opus 5.5)
+- **Original prompt (verbatim):** "vamos a dividir el trabajo en ramas una para cada persona"
+- **Prompt (rephrased):** "Create a feature branch for each piece of work so that every member works on their own branch and merges through a reviewed pull request."
+- **Generated:** the branches `feature/bitwise-enumeration`, `feature/log-combinatorics`, `feature/probabilities`, `feature/latex-report`, `feature/entropy`, `feature/large-n`, `feature/integration`, all created from `main`.
+- **Team changes and verification:** none.
+
+### 7. Distribute the phases among the members
+- **Date / member / tool:** 20 Oct 2026 · Guillermo García · Claude Code (Claude Opus 5.5)
+- **Original prompt (verbatim):** "distribuye las fases para cada persona, primero la mia luego andres y luego ya hector y carlos en el orden que quieras / si hay mas de 4 fases pues que se distribuyan mas o menos equitativamente, un poco mas a andres, luego yo y luego carlos y hector"
+- **Prompt (rephrased):** "Assign the phases to the four of us in the order Guillermo, Andrés, then Héctor and Carlos, roughly evenly, with a bit more for Andrés, then me, then Carlos and Héctor, and pick a reviewer for each member's pull requests."
+- **Generated:** the Owner column and the Team table (reviewers) in `PLAN.md`.
+- **Team changes and verification:** owners can be swapped by editing `PLAN.md`.
