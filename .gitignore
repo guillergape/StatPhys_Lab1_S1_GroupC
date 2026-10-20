@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
+*.egg-info/
+.venv/
+.env
+
+# LaTeX build files (keep report/main.tex and report/figures/*.pdf)
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.toc
+*.nav
+*.snm
+report/main.pdf
+
+# OS / editors
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
