@@ -7,7 +7,7 @@ Deadline: **Tue 3 Nov 2026** (repo URL + report PDF on Aula Global, −1 point p
 | Member | GitHub | git user.name | AI tool | Reviews PRs of | NIA last 2 digits |
 |---|---|---|---|---|---|
 | Guillermo García Pelayo | `guillergape` | GUILLERMO GARCIA PELAYO | Claude Code | Héctor | 69 |
-| Andrés Mármol del Amo | `AndreuwMetal` | | Claude Code (Max) | Carlos | ? |
+| Andrés Mármol del Amo | `AndreuwMetal` | AndreuwMetal | Claude Code (Max) | Carlos | ? |
 | Héctor Armenteros Arauzo | `HectorArmen` | | GitHub Copilot, Antigravity | Guillermo | 09 |
 | Carlos Cordero López | `Carlos8281-progra` | | GitHub Copilot, Antigravity | Andrés | ? |
 
@@ -21,7 +21,7 @@ Status is the source of truth for "what's next": `todo` → `done` (set to `done
 |---|---|---|---|---|---|---|
 | 1 | Setup: environment, repo, layout, AI statement | Guillermo | — | — | 20 Oct | done |
 | 2 | Bitwise enumeration (Part 1 a, b) | Guillermo | `feature/bitwise-enumeration` | — | Sun 25 Oct | todo |
-| 3 | Log-space combinatorics (Part 1 c, d, e) | Andrés | `feature/log-combinatorics` | — | Sun 25 Oct | todo |
+| 3 | Log-space combinatorics (Part 1 c, d, e) | Andrés | `feature/log-combinatorics` | — | Sun 25 Oct | done |
 | 4 | Probabilities (Part 2 a–d) and N = 100 + M | Héctor | `feature/probabilities` | 3 | Mon 26 Oct | todo |
 | 5 | Report I: structure, introduction, methodology | Carlos | `feature/latex-report` | — | Sun 25 Oct | todo |
 | 6 | Entropy and thermodynamic implications (Part 2 e–i) | Andrés | `feature/entropy` | 3, 4 | Tue 27 Oct | todo |
