@@ -7,7 +7,7 @@ Deadline: **Tue 3 Nov 2026** (repo URL + report PDF on Aula Global, −1 point p
 | Member | GitHub | git user.name | AI tool | Reviews PRs of | NIA last 2 digits |
 |---|---|---|---|---|---|
 | Guillermo García Pelayo | `guillergape` | GUILLERMO GARCIA PELAYO | Claude Code | Héctor | 69 |
-| Andrés Mármol del Amo | `AndreuwMetal` | AndreuwMetal | Claude Code (Max) | Carlos | ? |
+| Andrés Mármol del Amo | `AndreuwMetal` | AndreuwMetal | Claude Code (Max) | Carlos | 22 |
 | Héctor Armenteros Arauzo | `HectorArmen` | | GitHub Copilot, Antigravity | Guillermo | 09 |
 | Carlos Cordero López | `Carlos8281-progra` | | GitHub Copilot, Antigravity | Andrés | ? |
 

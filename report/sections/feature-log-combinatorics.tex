@@ -33,13 +33,13 @@ $N$ & $\Omega(N,N/2)$ & $\ln\Omega(N,N/2)$ & $\sigma=\sqrt N/2$ & $\sigma/N$ \\
 \item \textbf{Exact integers.} \texttt{math.comb} never overflows (Python integers are arbitrary-precision), but $\Omega(N,N/2)$ has $\approx0.3N$ digits and the arithmetic slows down accordingly. A whole row $k=0\dots N$ took $0.66$\,s for $N=5000$, $4.4$\,s for $N=10^4$ and $30.6$\,s for $N=2\times10^4$, i.e.\ time $\propto N^{2.8}$, which reaches 5 minutes at $N\approx4.5\times10^4$.
 \item \textbf{Log space.} $\ln\Omega\approx N\ln2$ never overflows, and a whole row costs about $11$\,ns and $32$\,B per point ($1.1$\,s and $3.2$\,GB for $N=10^8$), so memory caps a full row at $N\approx1.5\times10^9$. Precision then takes over: $\ln\Omega$ is a difference of three numbers of size $\approx N\ln N$, so its absolute error is about one unit in the last place of $\ln\Gamma(N+1)$. Compared with the Stirling/Gaussian form, the error is $2\times10^{-7}$ at $N=10^8$, $2\times10^{-3}$ at $10^{12}$, $0.2$ at $10^{14}$ (so $\Omega$ is uncertain by $\approx20\%$) and $4$ at $10^{15}$ (a factor $e^4$). Past $2^{53}\approx9\times10^{15}$, $k$ itself cannot be stored exactly in a float.
 \end{itemize}
-In practice, \textbf{the limiting factor is the finite range and precision of floating-point numbers}: $\Omega$ can be computed and plotted up to $N=1029$, and $\ln\Omega$ up to $N\sim10^{13}$, where its error is still $\lesssim0.01$. A plot is a weaker constraint than it seems: for large $N$ only the $\sim\sqrt N$ values of $k$ around $N/2$ are visible, so a curve with $10^8$ points carries no more information than one with a thousand.
+In practice, \textbf{the limiting factor is the finite range and precision of floating-point numbers}: $\Omega$ can be computed and plotted up to $N=1029$, and $\ln\Omega$ up to $N\sim10^{13}$, where its error is still below $0.01$. A plot is a weaker constraint than it seems: for large $N$ only the $\sim\sqrt N$ values of $k$ around $N/2$ are visible, so a curve with $10^8$ points carries no more information than one with a thousand.
 
 \paragraph{(e) Scaling to $N\sim10^{23}$.} By the de~Moivre--Laplace theorem, the binomial distribution tends to a Gaussian. Using Stirling's formula, $\ln n!\simeq n\ln n-n+\tfrac12\ln(2\pi n)$, around the peak:
-\begin{equation}
-\ln\Omega(N,k)\simeq N\ln2+\tfrac12\ln\frac{2}{\pi N}-\frac{2\,(k-N/2)^2}{N},
-\qquad\text{i.e.}\quad \Omega(N,k)\simeq 2^N\sqrt{\frac{2}{\pi N}}\;e^{-(k-N/2)^2/2\sigma^2},\quad \sigma=\frac{\sqrt N}{2}.
-\end{equation}
+\begin{gather}
+\ln\Omega(N,k)\simeq N\ln2+\tfrac12\ln\frac{2}{\pi N}-\frac{2\,(k-N/2)^2}{N},\\
+\Omega(N,k)\simeq 2^N\sqrt{\frac{2}{\pi N}}\;e^{-(k-N/2)^2/2\sigma^2},\qquad \sigma=\frac{\sqrt N}{2}.
+\end{gather}
 This form (\texttt{gaussian\_ln\_omega}) already differs from the exact value at the peak by only $1/(4N)$ in $\ln\Omega$: $0.0125$ for $N=20$ ($1.3\,\%$ in $\Omega$) and $0.0025$ for $N=100$. For $N=10^{23}$:
 \begin{itemize}
 \item the peak sits at $k=5\times10^{22}$ with $\ln\Omega_{\max}\simeq N\ln2=6.93\times10^{22}$, i.e.\ $\Omega_{\max}\approx10^{3.01\times10^{22}}$, and contains essentially all $2^N$ microstates;
