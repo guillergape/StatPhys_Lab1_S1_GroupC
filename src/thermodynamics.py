@@ -214,13 +214,28 @@ def interval_probability_gaussian(N: float, d_lo: float, d_hi: float) -> float:
     return 0.5 * (math.erf((d_hi + 0.5) / scale) - math.erf((d_lo - 0.5) / scale))
 
 
-def ln_tail_probability(N: float, d: float) -> float:
-    """ln P(|k - N/2| >= d) in the Gaussian limit, = ln erfc(x) with x = (d - 1/2) / (sigma sqrt 2)
-    (continuity correction, as in interval_probability_gaussian).
+def tail_probability_exact(N: int, d: float) -> float:
+    """P(|k - N/2| >= d) as an exact sum over k (for N small enough to sum)."""
+    c = N / 2
+    inner_lo, inner_hi = math.floor(c - d) + 1, math.ceil(c + d) - 1  # the k with |k - N/2| < d
+    if inner_lo > inner_hi:
+        return 1.0
+    return 1.0 - interval_probability(N, max(inner_lo, 0), min(inner_hi, N))
 
-    erfc underflows for x > ~27, so beyond that the asymptotic ln erfc(x) ~ -x^2 - ln(x sqrt(pi)) is used.
+
+def ln_tail_probability(N: float, d: float) -> float:
+    """ln P(|k - N/2| >= d) in the Gaussian limit, = ln erfc(x) with x = (D - 1/2) / (sigma sqrt 2).
+
+    The distances |k - N/2| live on a lattice: integers for even N, half-integers for odd N.
+    d is first rounded up to the nearest lattice distance D, then the continuity correction 1/2
+    is applied (as in interval_probability_gaussian). erfc underflows for x > ~27, so beyond that
+    the asymptotic ln erfc(x) ~ -x^2 - ln(x sqrt(pi)) is used.
     """
-    x = (d - 0.5) / math.sqrt(N / 2)
+    offset = 0.5 if N % 2 else 0.0
+    D = math.ceil(d - offset) + offset
+    if D <= offset:  # every macrostate is at least this far from N/2
+        return 0.0
+    x = (D - 0.5) / math.sqrt(N / 2)
     if x < 26:
         return math.log(math.erfc(x))
     return -x * x - math.log(x * math.sqrt(math.pi))
@@ -270,5 +285,8 @@ if __name__ == "__main__":
         print(f"2i ({reading}): " + ", ".join(f"P({r['k_half'][0]})/P({k}) = {v:.6e}" for k, v in ratios.items()))
     big = solve_part2_k()
     print(f"2k (N = {big['N']:.0e}): " + ", ".join(f"{key} = {v:.4e}" for key, v in big.items() if key != "N"))
-    for n in (121, 1e4, 1e23):
-        print(f"2j: P(|k - N/2| >= 1% of N), N = {n:g}: ln P = {ln_tail_probability(n, 0.01 * n):.4e}")
+    for n in (121, 10**4):
+        print(f"2j: P(|k - N/2| >= 1% of N), N = {n}: P = {tail_probability_exact(n, 0.01 * n):.6f} (exact sum), "
+              f"Gaussian {math.exp(ln_tail_probability(n, 0.01 * n)):.6f}")
+    print(f"2j: P(|k - N/2| >= 1% of N), N = 1e23: ln P = {ln_tail_probability(1e23, 1e21):.4e} (Gaussian)")
+    print(f"2j: P(|k - 60.5| >= 24.5), N = 121: {tail_probability_exact(121, 24.5):.6e} (exact sum)")
