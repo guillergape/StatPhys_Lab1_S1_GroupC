@@ -183,6 +183,71 @@ def solve_part2_e_to_i(N: int | None = None) -> dict[str, Any]:
     }
 
 
+# --- Phase 7 (Andrés): Second Law and the large-N limit, Part 2 j-k ---
+# For N ~ 1e23, lgamma(N + 1) has a rounding error of ~1e9 and k = N/2 + 25 is not even
+# representable as a float, so everything below works with offsets d = k - N/2 and with
+# entropy differences taken analytically, never as a difference of two huge numbers.
+
+def ln_omega_small_k(N: float, k: int) -> float:
+    """ln Omega(N, k) for k << N: k ln N - ln k! - k (k - 1) / (2N), from ln(N - i) = ln N - i/N."""
+    return k * math.log(N) - math.lgamma(k + 1) - k * (k - 1) / (2 * N)
+
+
+def ln_probability_small_k(N: float, k: int) -> float:
+    """ln P(N, k) = ln Omega(N, k) - N ln 2 for k << N."""
+    return ln_omega_small_k(N, k) - N * math.log(2)
+
+
+def peak_probability(N: float) -> float:
+    """P(N, N/2) ~ sqrt(2 / (pi N)) for large N (Stirling)."""
+    return math.sqrt(2 / (math.pi * N))
+
+
+def delta_entropy_near_peak(N: float, d1: float, d2: float) -> float:
+    """Delta S / k_B between k1 = N/2 + d1 and k2 = N/2 + d2 in the Gaussian limit: -2 (d1^2 - d2^2) / N."""
+    return -2 * (d1 * d1 - d2 * d2) / N
+
+
+def interval_probability_gaussian(N: float, d_lo: float, d_hi: float) -> float:
+    """P(d_lo <= k - N/2 <= d_hi) in the Gaussian limit (sigma = sqrt(N)/2, continuity correction 1/2)."""
+    scale = math.sqrt(N / 2)  # sigma * sqrt(2)
+    return 0.5 * (math.erf((d_hi + 0.5) / scale) - math.erf((d_lo - 0.5) / scale))
+
+
+def ln_tail_probability(N: float, d: float) -> float:
+    """ln P(|k - N/2| >= d) in the Gaussian limit, = ln erfc(x) with x = (d - 1/2) / (sigma sqrt 2)
+    (continuity correction, as in interval_probability_gaussian).
+
+    erfc underflows for x > ~27, so beyond that the asymptotic ln erfc(x) ~ -x^2 - ln(x sqrt(pi)) is used.
+    """
+    x = (d - 0.5) / math.sqrt(N / 2)
+    if x < 26:
+        return math.log(math.erfc(x))
+    return -x * x - math.log(x * math.sqrt(math.pi))
+
+
+def solve_part2_k(N: float = 1e23) -> dict[str, Any]:
+    """Questions (a)-(i) re-evaluated in the large-N limit (question k). Tiny or huge numbers as ln or log10."""
+    log10 = math.log(10)
+    ln_peak_omega = N * math.log(2) + 0.5 * math.log(2 / (math.pi * N))
+    return {
+        "N": N,
+        "sigma": math.sqrt(N) / 2,
+        "2a_log10_P30": ln_probability_small_k(N, 30) / log10,
+        "2b_P_peak": peak_probability(N),
+        "2c_dP": interval_probability_gaussian(N, -10, 10),
+        "2d_dP": interval_probability_gaussian(N, -20, 20),
+        "2e_dS_kB": delta_entropy_near_peak(N, 25, 0),
+        "2f_dS_kB": delta_entropy_near_peak(N, 10, 0),
+        "2g_dS_kB": ln_peak_omega - ln_omega_small_k(N, 20),
+        "2g_dS_JK": K_B * (ln_peak_omega - ln_omega_small_k(N, 20)),
+        "2h_log10_wait_s": -ln_probability_small_k(N, 8) / log10,
+        "2i_log10_ratio_k11": (ln_peak_omega - ln_omega_small_k(N, 11)) / log10,
+        "2i_ratio_half_N_pm10": math.exp(-delta_entropy_near_peak(N, 10, 0)),
+        "2j_ln_P_1percent": ln_tail_probability(N, 0.01 * N),
+    }
+
+
 if __name__ == "__main__":
     results = solve_part2_a_to_d()
     print(f"Team N: {results['N']} (M = {team_M()})")
@@ -203,3 +268,7 @@ if __name__ == "__main__":
           f"{h['wait_over_universe_age']:.3e} ages of the Universe; P(k<=8) = {h['P_le_8']:.6e}")
     for reading, ratios in r["2i"].items():
         print(f"2i ({reading}): " + ", ".join(f"P({r['k_half'][0]})/P({k}) = {v:.6e}" for k, v in ratios.items()))
+    big = solve_part2_k()
+    print(f"2k (N = {big['N']:.0e}): " + ", ".join(f"{key} = {v:.4e}" for key, v in big.items() if key != "N"))
+    for n in (121, 1e4, 1e23):
+        print(f"2j: P(|k - N/2| >= 1% of N), N = {n:g}: ln P = {ln_tail_probability(n, 0.01 * n):.4e}")
