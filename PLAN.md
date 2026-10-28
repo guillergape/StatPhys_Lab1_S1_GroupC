@@ -9,7 +9,7 @@ Deadline: **Tue 3 Nov 2026** (repo URL + report PDF on Aula Global, −1 point p
 | Guillermo García Pelayo | `guillergape` | GUILLERMO GARCIA PELAYO | Claude Code | Héctor | 69 |
 | Andrés Mármol del Amo | `AndreuwMetal` | | Claude Code (Max) | Carlos | ? |
 | Héctor Armenteros Arauzo | `HectorArmen` | | GitHub Copilot, Antigravity | Guillermo | 09 |
-| Carlos Cordero López | `Carlos8281-progra` | Carlos Cordero López | GitHub Copilot, Antigravity | Andrés | ? |
+| Carlos Cordero López | `Carlos8281-progra` | Carlos Cordero López | GitHub Copilot, Antigravity | Andrés | 45 |
 
 Fill in your `git config user.name` and your NIA's last two digits in your first PR.
 
