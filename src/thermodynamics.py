@@ -132,6 +132,57 @@ def solve_part2_a_to_d(N: int | None = None) -> dict[str, Any]:
     }
 
 
+
+# --- Phase 6 (Andrés): entropy and thermodynamic implications, Part 2 e-i ---
+
+K_B = 1.380649e-23  # Boltzmann constant in J/K (exact since the 2019 SI redefinition)
+AGE_OF_UNIVERSE_S = 13.787e9 * 365.25 * 86400  # 13.787 +- 0.020 Gyr (Planck 2018), in seconds
+
+
+def likelihood_ratio(N: int, k1: int, k2: int) -> float:
+    """How many times more likely macrostate k1 is than k2: P(k1) / P(k2) = exp(Delta S / k_B)."""
+    return math.exp(delta_entropy(N, k1, k2))
+
+
+def waiting_time(N: int, k: int, tosses_per_second: float = 1.0) -> float:
+    """Mean time (s) until a toss of all N coins lands exactly on k heads.
+
+    Each toss is an independent trial with success probability P(N, k), so the number of
+    tosses until the first success is geometric with mean 1 / P(N, k).
+    """
+    return 1.0 / (probability(N, k) * tosses_per_second)
+
+
+def solve_part2_e_to_i(N: int | None = None) -> dict[str, Any]:
+    """Numerical answers for Part 2 questions (e) through (i).
+
+    For odd N, "N/2" is the degenerate peak k = N//2 = (N+1)//2 (same Omega), and
+    "N/2 + d" is taken as N//2 + d; the other neighbour (N+1)//2 + d is returned too.
+    "N/2 - d" is (N+1)//2 - d, the mirror image of N//2 + d (same Omega).
+    """
+    if N is None:
+        N = team_N()
+    lo, hi = N // 2, (N + 1) // 2
+    M = N - 100
+
+    def ds(k1: int, k2: int) -> tuple[float, float]:
+        s = delta_entropy(N, k1, k2)
+        return s, s * K_B
+
+    return {
+        "N": N,
+        "k_half": (lo, hi),
+        "2e": {"k1": lo + 25, "k2": lo, "dS": ds(lo + 25, lo), "dS_alt": ds(hi + 25, lo)},
+        "2f": {"k1": lo + 10, "k2": lo, "dS": ds(lo + 10, lo), "dS_alt": ds(hi + 10, lo)},
+        "2g": {"k1": lo, "k2": 20, "dS": ds(lo, 20)},
+        "2h": {"P8": probability(N, 8), "wait_s": waiting_time(N, 8),
+               "wait_over_universe_age": waiting_time(N, 8) / AGE_OF_UNIVERSE_S,
+               "P_le_8": interval_probability(N, 0, 8)},
+        "2i": {"as_written": {k: likelihood_ratio(N, lo, k) for k in (M - 10, M + 10)},
+               "half_N_reading": {k: likelihood_ratio(N, lo, k) for k in (hi - 10, lo + 10)}},
+    }
+
+
 if __name__ == "__main__":
     results = solve_part2_a_to_d()
     print(f"Team N: {results['N']} (M = {team_M()})")
@@ -142,3 +193,13 @@ if __name__ == "__main__":
           f"(mode range [{results['k_peak_low']-10}, {results['k_peak_low']+10}]: {results['2c_dp_mode']:.6f})")
     print(f"2d: Delta P (tails in {results['2d_range_sym']}): {results['2d_dp_symmetric']:.6f} "
           f"(mode range [{results['k_peak_low']-20}, {results['k_peak_low']+20}]: {results['2d_dp_mode']:.6f})")
+    r = solve_part2_e_to_i()
+    for q in ("2e", "2f", "2g"):
+        d = r[q]
+        alt = f"   (k1 = {d['k1'] + 1}: {d['dS_alt'][0]:+.4f} k_B)" if "dS_alt" in d else ""
+        print(f"{q}: k1 = {d['k1']}, k2 = {d['k2']}: dS = {d['dS'][0]:+.4f} k_B = {d['dS'][1]:+.4e} J/K{alt}")
+    h = r["2h"]
+    print(f"2h: P(k=8) = {h['P8']:.6e}, mean wait = {h['wait_s']:.4e} s = "
+          f"{h['wait_over_universe_age']:.3e} ages of the Universe; P(k<=8) = {h['P_le_8']:.6e}")
+    for reading, ratios in r["2i"].items():
+        print(f"2i ({reading}): " + ", ".join(f"P({r['k_half'][0]})/P({k}) = {v:.6e}" for k, v in ratios.items()))
