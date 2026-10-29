@@ -1,6 +1,7 @@
 \documentclass[11pt,a4paper]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
+\usepackage{lmodern} % scalable T1 fonts: microtype's font expansion fails on bitmap cm fonts
 \usepackage{amsmath,amssymb,amsfonts,bm}
 \usepackage{graphicx}
 \usepackage{booktabs}
@@ -27,7 +28,7 @@
 \maketitle
 
 \begin{abstract}
-We investigate the microscopic foundations of statistical mechanics and the emergence of macroscopic thermodynamic behavior using an idealized binary system of $N$ unbiased, independent particles (two-state model isomorphic to spin-$1/2$ paramagnetic dipoles and binary lattice gases). The accessible phase space expands exponentially as $2^N$, exhibiting a fundamental tension between microscopic reversibility and macroscopic irreversibility. We implement and evaluate two complementary computational paradigms: (i) full bitwise microstate enumeration with constant-memory bit-shifting and vectorized popcounts, measuring exact state distributions up to a computational frontier of $N_{\max} = 36$ under a strict 5-minute wall-clock constraint; and (ii) log-space combinatorics based on the log-Gamma function ($\ln\Gamma$), overcoming IEEE-754 64-bit floating-point overflow ($N > 1029$) to probe distributions up to macroscopic scales ($N \sim 10^{23}$). For a team-specific system size of $N = 100 + M$, we compute macrostate multiplicities $\Omega(N, k)$, probability profiles, and Boltzmann entropy differences $\Delta S = k_B \ln[\Omega(k_1)/\Omega(k_2)]$. In accordance with the de~Moivre--Laplace limit, relative macroscopic fluctuations decay as $\sigma/N \propto 1/\sqrt{N}$, confining the system to an overwhelmingly probable equilibrium state. Finally, recurrence times for low-entropy configurations demonstrate that spontaneous violations of the Second Law of Thermodynamics are not dynamically prohibited, but statistically impossible on cosmological timescales.
+We investigate the microscopic foundations of statistical mechanics and the emergence of macroscopic thermodynamic behavior using an idealized binary system of $N$ unbiased, independent particles (two-state model isomorphic to spin-$1/2$ paramagnetic dipoles and binary lattice gases). The accessible phase space expands exponentially as $2^N$, exhibiting a fundamental tension between microscopic reversibility and macroscopic irreversibility. We implement and evaluate two complementary computational paradigms: (i) full bitwise microstate enumeration with constant-memory bit-shifting and vectorized popcounts, measuring exact state distributions up to a computational frontier of $N_{\max} = 36$ under a strict 5-minute wall-clock constraint; and (ii) log-space combinatorics based on the log-Gamma function ($\ln\Gamma$), overcoming IEEE-754 64-bit floating-point overflow ($N > 1029$), complemented by Stirling/Gaussian asymptotics to reach macroscopic scales ($N \sim 10^{23}$). For a team-specific system size of $N = 100 + M$, we compute macrostate multiplicities $\Omega(N, k)$, probability profiles, and Boltzmann entropy differences $\Delta S = k_B \ln[\Omega(k_1)/\Omega(k_2)]$. In accordance with the de~Moivre--Laplace limit, relative macroscopic fluctuations decay as $\sigma/N \propto 1/\sqrt{N}$, confining the system to an overwhelmingly probable equilibrium state. Finally, recurrence times for low-entropy configurations demonstrate that spontaneous violations of the Second Law of Thermodynamics are not dynamically prohibited, but statistically impossible on cosmological timescales.
 \end{abstract}
 
 \vspace{0.5em}
@@ -115,11 +116,11 @@ The primary objective of this experimental and computational investigation is to
 Scientific computing requires strict adherence to reproducible environments, modular software engineering, version-controlled collaboration, and exhaustive verification. Our methodology integrates modern industry standards with academic rigor.
 
 \subsection{Reproducible Computational Environment}
-To eliminate platform discrepancies across team workstations (running macOS, Linux, and Windows), all computational analyses are executed within an isolated, deterministic Conda environment named \texttt{statphys\_lab1}. The complete environment specification is codified in \texttt{environment.yml}:
+To eliminate platform discrepancies across the team members' laptops, all computational analyses are executed within an isolated, deterministic Conda environment named \texttt{statphys\_lab1}. The complete environment specification is codified in \texttt{environment.yml}:
 \begin{itemize}
-    \item \textbf{Python 3.11.9}: Serves as the base runtime, providing native support for \texttt{int.bit\_count()} and optimized integer arithmetic.
-    \item \textbf{NumPy ($\ge 1.24$)}: Utilized for high-performance vectorized operations, contiguous memory arrays (\texttt{numpy.arange}), and C-accelerated bitwise counting (\texttt{numpy.bitwise\_count}).
-    \item \textbf{SciPy ($\ge 1.10$)}: Provides the specialized logarithmic gamma function \texttt{scipy.special.gammaln} for array-wide log-space combinatorics.
+    \item \textbf{Python 3.11}: Serves as the base runtime, providing native support for \texttt{int.bit\_count()} and optimized integer arithmetic.
+    \item \textbf{NumPy ($\ge 2.0$)}: Utilized for high-performance vectorized operations, contiguous memory arrays (\texttt{numpy.arange}), and C-accelerated bitwise counting (\texttt{numpy.bitwise\_count}, available since NumPy~2.0).
+    \item \textbf{SciPy ($\ge 1.10$)}: Provides \texttt{gammaln}, the log-Gamma function used to evaluate whole rows of $\ln\Omega$ at once.
     \item \textbf{Matplotlib ($\ge 3.7$)}: Configured for the publication-quality generation of vector graphic figures (\texttt{.pdf}) with explicit typographical scaling.
     \item \textbf{Pytest ($\ge 7.0$)}: Automated unit testing framework executed across all modules prior to code integration.
 \end{itemize}
@@ -127,9 +128,9 @@ To eliminate platform discrepancies across team workstations (running macOS, Lin
 \subsection{Modular Architecture \& Shared Interfaces}
 The codebase is decoupled into distinct modules under \texttt{src/}, each adhering to strict, pre-agreed type-annotated signatures defined in \texttt{PLAN.md}:
 \begin{itemize}
-    \item \texttt{src/microstates.py}: Defines \texttt{microstates(N: int) -> Iterator[int]} and \texttt{macrostate\_counts(N: int) -> list[int]}. Implements both pure-Python bitwise generation and multi-threaded block-vectorized chunking for execution benchmarks.
-    \item \texttt{src/combinatorics.py}: Defines \texttt{ln\_omega(N: int, k: int) -> float} based on \texttt{math.lgamma}, vectorized array utilities, and asymptotic Gaussian approximations.
-    \item \texttt{src/thermodynamics.py}: Defines functions for calculating the team parameter $N = 100 + M$, macrostate probabilities \texttt{probability(N, k)}, cumulative interval probabilities \texttt{interval\_probability(N, k1, k2)}, and entropy differences \texttt{delta\_entropy(N, k1, k2)}.
+    \item \texttt{src/microstates.py}: the generator \texttt{microstates(N)} and \texttt{macrostate\_counts(N)}, both in pure Python and in a multi-process, block-vectorized version used for the benchmark.
+    \item \texttt{src/combinatorics.py}: \texttt{ln\_omega(N, k)} with \texttt{math.lgamma}, its vectorized version and the large-$N$ Gaussian approximation.
+    \item \texttt{src/thermodynamics.py}: the team size $N = 100 + M$, the macrostate and interval probabilities, the entropy differences \texttt{delta\_entropy}, and the large-$N$ answers built on them.
     \item \texttt{main.py}: Master pipeline executing all computational routines sequentially, printing validated numerical tables and rendering vector plots directly to \texttt{report/figures/}.
 \end{itemize}
 
@@ -137,7 +138,7 @@ The codebase is decoupled into distinct modules under \texttt{src/}, each adheri
 Collaboration is governed by a distributed Git workflow hosted on GitHub. Direct commits to the \texttt{main} branch are strictly restricted. Instead, a structured feature-branch workflow is enforced:
 \begin{enumerate}
     \item Work is divided into discrete, ordered phases allocated among team members.
-    \item Each member works in an isolated branch (e.g., \texttt{feature/bitwise-enumeration}, \texttt{feature/log-combinatorics}, \texttt{feature/latex-report}).
+    \item Each member works in an isolated branch, one per phase (e.g.\ \texttt{feature/latex-report}).
     \item Cross-review protocol: Once a phase is complete, a formal Pull Request (PR) is opened against \texttt{main}. A designated teammate reviews the implementation against analytical benchmarks and verifies that all unit tests pass before approval and merge.
 \end{enumerate}
 
@@ -215,7 +216,7 @@ This laboratory practice establishes a direct, quantitative bridge between the m
 
 By deploying bitwise manipulation, we demonstrated that direct microscopic enumeration is strictly constrained by time complexity: because the state space grows as $2^N$, exact counting ceases to be viable beyond $N \approx 36$ on modern multicore hardware under reasonable execution limits ($\le 5\,\text{min}$), even when memory consumption is maintained strictly constant. 
 
-To overcome the subsequent barrier of IEEE-754 floating-point overflow ($N = 1029$), we implemented combinatorics in logarithmic space via the log-Gamma function ($\ln\Gamma$). This technique provides exact macroscopic multiplicity curves across arbitrary scales, confirming that as $N$ increases from small systems to Avogadro-scale assemblies ($N \sim 10^{23}$), the macrostate probability distribution collapses onto a sharply peaked Gaussian centered at $k = N/2$. The relative magnitude of statistical fluctuations decays as $1/\sqrt{N}$, rendering macroscopic thermodynamic states completely deterministic.
+To overcome the subsequent barrier of IEEE-754 floating-point overflow ($N = 1029$), we implemented combinatorics in logarithmic space via the log-Gamma function ($\ln\Gamma$). This technique gives the multiplicity curves without overflow up to $N \sim 10^{13}$, where the rounding error of the log-Gamma difference reaches $\sim 10^{-2}$; beyond that, Stirling's approximation takes over. Together they confirm that as $N$ increases from small systems to Avogadro-scale assemblies ($N \sim 10^{23}$), the macrostate probability distribution collapses onto a sharply peaked Gaussian centered at $k = N/2$. The relative magnitude of statistical fluctuations decays as $1/\sqrt{N}$, rendering macroscopic thermodynamic states completely deterministic.
 
 Finally, analysis of Boltzmann entropy $S = k_B \ln\Omega$ and recurrence times elucidates the true nature of the Second Law of Thermodynamics: macroscopic irreversibility is not the result of non-reversibility in fundamental microscopic interactions, but rather a statistical consequence of the astronomical disproportion in phase space volume between equilibrium and non-equilibrium configurations.
 
