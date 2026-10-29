@@ -100,10 +100,14 @@ def test_solve_part2_answers():
     assert ans["k_peak_high"] == 61
     assert math.isclose(ans["2b_p_peak"], 0.0720893, rel_tol=1e-5)
 
-    # 2c: Heads interval covers > 90%
+    # 2c: Heads interval covers k in [51, 70] and ~93.14%
+    assert ans["2c_range_sym"] == (51, 70)
+    assert math.isclose(ans["2c_dp_symmetric"], 0.931406, rel_tol=1e-5)
     assert 0.90 < ans["2c_dp_symmetric"] < 0.96
 
-    # 2d: Tails interval covers > 99.9%
+    # 2d: Tails interval covers t in [41, 80] and ~99.98%
+    assert ans["2d_range_sym"] == (41, 80)
+    assert math.isclose(ans["2d_dp_symmetric"], 0.999756, rel_tol=1e-5)
     assert 0.999 < ans["2d_dp_symmetric"] < 1.0
 
 
