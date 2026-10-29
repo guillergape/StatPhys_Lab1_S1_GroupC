@@ -32,7 +32,7 @@ Probabilities are evaluated in log space to prevent numerical overflow or underf
 \begin{equation}
     P(N, k) = \frac{\Omega(N, k)}{2^N} = \exp\left( \ln\Omega(N, k) - N\ln 2 \right),
 \end{equation}
-where $\ln\Omega(N, k) = \ln\Gamma(N+1) - \ln\Gamma(k+1) - \ln\Gamma(N-k+1)$ is evaluated via \texttt{math.lgamma}. All values below were computed using \texttt{src/thermodynamics.py} and verified through unit tests in \texttt{tests/test\_thermodynamics.py}.
+where $\ln\Omega(N, k) = \ln\Gamma(N+1) - \ln\Gamma(k+1) - \ln\Gamma(N-k+1)$ is evaluated via \texttt{math.lgamma}. All values below were computed using \texttt{src/thermodynamics.py} and verified through unit tests in \texttt{tests/test\_thermodynamics.py}. Because these are exact theoretical combinatorial probabilities, they carry no experimental or statistical sampling uncertainty; computations in IEEE 754 double precision (float64 log space) maintain a relative numerical error below $10^{-13}$, and reported values are rounded to the displayed decimal digits.
 
 \paragraph{(a) Probability of $k = 30$ heads.}
 For $k = 30$ heads out of $N = 121$ coins:
@@ -60,7 +60,7 @@ The number of tails in any microstate is $t = N - k$. Because fair coin tossing 
 \begin{equation}
     P_{\text{tails}}(N, t) = P_{\text{heads}}(N, t).
 \end{equation}
-The symmetric interval of tails $t \in [50.5 - 20, 50.5 + 20] = [40.5, 80.5]$ encompasses the integer range $t \in [41, 80]$. In terms of heads, this corresponds to $41 \le 121 - k \le 80 \iff 41 \le k \le 80$. The cumulative probability is:
+The symmetric interval of tails $t \in [60.5 - 20, 60.5 + 20] = [40.5, 80.5]$ encompasses the integer range $t \in [41, 80]$. In terms of heads, this corresponds to $41 \le 121 - k \le 80 \iff 41 \le k \le 80$. The cumulative probability is:
 \begin{equation}
     \Delta P_{\text{tails}} = \sum_{t=41}^{80} P(121, t) = 0.999756 \quad (99.9756\,\%).
 \end{equation}
