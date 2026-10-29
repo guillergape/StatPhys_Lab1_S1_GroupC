@@ -17,20 +17,7 @@ from __future__ import annotations
 import math
 from typing import Any, Mapping, Sequence
 
-# Fallback ln_omega if Phase 3 (src.combinatorics) has not been merged into main yet.
-try:
-    from src.combinatorics import ln_omega as _src_ln_omega
-
-    if abs(_src_ln_omega(4, 2) - math.log(6.0)) < 1e-10:
-        ln_omega = _src_ln_omega
-    else:
-        raise ImportError
-except (ImportError, AttributeError, Exception):
-    def ln_omega(N: int, k: int) -> float:
-        """ln Omega(N, k) using math.lgamma: ln Gamma(N+1) - ln Gamma(k+1) - ln Gamma(N-k+1)."""
-        if not (0 <= k <= N):
-            raise ValueError(f"need 0 <= k <= N, got N={N}, k={k}")
-        return math.lgamma(N + 1) - math.lgamma(k + 1) - math.lgamma(N - k + 1)
+from src.combinatorics import ln_omega  # Phase 3
 
 
 def harmonic_mean(digits: Sequence[float]) -> float:
