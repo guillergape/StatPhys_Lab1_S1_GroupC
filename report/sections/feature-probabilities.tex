@@ -32,7 +32,7 @@ Probabilities are evaluated in log space to prevent numerical overflow or underf
 \begin{equation}
     P(N, k) = \frac{\Omega(N, k)}{2^N} = \exp\left( \ln\Omega(N, k) - N\ln 2 \right),
 \end{equation}
-where $\ln\Omega(N, k) = \ln\Gamma(N+1) - \ln\Gamma(k+1) - \ln\Gamma(N-k+1)$ is evaluated via \texttt{math.lgamma}. All values below were computed using \texttt{src/thermodynamics.py} and verified through unit tests in \texttt{tests/test\_thermodynamics.py}. Because these are exact theoretical combinatorial probabilities, they carry no experimental or statistical sampling uncertainty; computations in IEEE 754 double precision (float64 log space) maintain a relative numerical error below $10^{-13}$, and reported values are rounded to the displayed decimal digits.
+where $\ln\Omega(N, k) = \ln\Gamma(N+1) - \ln\Gamma(k+1) - \ln\Gamma(N-k+1)$ is evaluated via \texttt{math.lgamma} (Phase~3). All values below were computed with \texttt{src/thermodynamics.py} and checked by its unit tests. Because these are exact theoretical combinatorial probabilities, they carry no experimental or statistical sampling uncertainty; computations in IEEE 754 double precision (float64 log space) maintain a relative numerical error below $10^{-13}$, and reported values are rounded to the displayed decimal digits.
 
 \paragraph{(a) Probability of $k = 30$ heads.}
 For $k = 30$ heads out of $N = 121$ coins:
