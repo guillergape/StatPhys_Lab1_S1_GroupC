@@ -27,7 +27,7 @@ Status is the source of truth for "what's next": `todo` → `done` (set to `done
 | 6 | Entropy and thermodynamic implications (Part 2 e–i) | Andrés | `feature/entropy` | 3, 4 | Tue 27 Oct | done |
 | 7 | Second Law and large-N limit (Part 2 j, k) | Andrés | `feature/large-n` | 4, 6 | Wed 28 Oct | done |
 | 8 | Integration: `main.py` and vector figures | Guillermo | `feature/integration` | 2, 3, 4, 6 | Thu 29 Oct | done |
-| 9 | Report II: results, conclusion, AI appendix | Carlos | `feature/latex-report` | 5, 7, 8 | Sat 31 Oct | todo |
+| 9 | Report II: results, conclusion, AI appendix | Carlos | `feature/latex-report` | 5, 7, 8 | Sat 31 Oct | done |
 | 10 | Release: clean-clone check, tag `v1.0`, submit | Héctor | `release/v1.0` (only if fixes are needed) | 1–9 | Mon 2 Nov | todo |
 | 11 | Defense rehearsal | everyone | — | 10 | before the session | todo |
 

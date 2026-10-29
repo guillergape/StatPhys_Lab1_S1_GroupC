@@ -1,11 +1,11 @@
 % Phase 6 (Andrés): Part 2 e-i. Every number here comes from src/thermodynamics.py (python -m src.thermodynamics).
 \subsection{Entropy and thermodynamic implications}
 With Boltzmann's entropy $S=k_B\ln\Omega$, the entropy difference between two macrostates of the same $N$ is
-\begin{gather}
-\Delta S_{k_1k_2}\equiv S(k_1)-S(k_2)=k_B\,[\ln\Omega(N,k_1)-\ln\Omega(N,k_2)],\\
+\begin{equation}
+\Delta S_{k_1k_2}\equiv S(k_1)-S(k_2)=k_B\,[\ln\Omega(N,k_1)-\ln\Omega(N,k_2)],\qquad
 \frac{P(k_1)}{P(k_2)}=e^{\Delta S_{k_1k_2}/k_B},
-\end{gather}
-computed with \texttt{delta\_entropy} (Phase 4) on top of \texttt{ln\_omega} (Phase 3), and reported in units of $k_B$ and in J/K with $k_B=1.380649\times10^{-23}$\,J/K (exact in the SI). The multiplicities are exact integers, so the only numerical error is floating-point rounding, below $10^{-12}$ in relative terms. Since $N=121$ is odd, the most probable macrostate $N/2=60.5$ is the degenerate pair $k=60,61$ with the same $\Omega$; we read ``$N/2+d$'' as $k=60+d$ and also give the other neighbour, $k=61+d$, which brackets the half-integer value.
+\end{equation}
+computed with \texttt{delta\_entropy} on top of \texttt{ln\_omega}, in units of $k_B$ and in J/K ($k_B=1.380649\times10^{-23}$\,J/K, exact in the SI). The multiplicities are exact integers, so the only numerical error is floating-point rounding, below $10^{-12}$ in relative terms. Since $N=121$ is odd, we read ``$N/2+d$'' as $k=60+d$ and also give the other neighbour, $k=61+d$, which brackets the half-integer value.
 
 \begin{table}[htbp]\centering\small
 \caption{Entropy differences for $N=121$ coins. The last column is how many times more likely $k_1$ is than $k_2$.}\label{tab:entropy}
@@ -22,16 +22,12 @@ computed with \texttt{delta\_entropy} (Phase 4) on top of \texttt{ln\_omega} (Ph
 \end{tabular}
 \end{table}
 
-\paragraph{(e), (f), (g).} Table~\ref{tab:entropy}. Moving $25$ heads away from the peak lowers the entropy by $\approx10$--$11\,k_B$, so that macrostate is $\sim10^{-5}$ times as likely as the peak; $10$ heads away costs only $1.5$--$1.8\,k_B$, a factor $0.16$--$0.23$, so such fluctuations are common at $N=121$. In (g) the sign flips: going from the ordered state $k=20$ to the peak raises the entropy by $29.3\,k_B$, making the peak $5.4\times10^{12}$ times more likely. These values follow the Gaussian estimate $\Delta S/k_B\simeq-2[(k_1-N/2)^2-(k_2-N/2)^2]/N$ near the peak ($-9.92$ for (e), $-1.49$ for (f)) and depart from it further out ($27.1$ against the exact $29.3$ for (g)), where the distribution is no longer Gaussian. In joules per kelvin all these differences are of order $10^{-22}$\,J/K, tiny compared with macroscopic entropies because $N$ is only $121$.
+\paragraph{(e), (f), (g).} Table~\ref{tab:entropy}. Moving $25$ heads away from the peak lowers the entropy by $\approx10$--$11\,k_B$ (that macrostate is $\sim10^{-5}$ times as likely as the peak); $10$ heads away costs only $1.5$--$1.8\,k_B$, a factor $0.16$--$0.23$, so such fluctuations are common at $N=121$. In (g) the sign flips: going from the ordered state $k=20$ to the peak raises the entropy by $29.3\,k_B$, making the peak $5.4\times10^{12}$ times more likely. The Gaussian estimate $\Delta S/k_B\simeq-2[(k_1-N/2)^2-(k_2-N/2)^2]/N$ gives $-9.92$ for (e) and $-1.49$ for (f), but only $27.1$ for (g), where the distribution is no longer Gaussian. In J/K all these differences are $\sim10^{-22}$, tiny because $N$ is only $121$.
 
-\paragraph{(h) Waiting for 8 heads.} With a rate of $N$ coins per second, i.e.\ one toss of all $121$ coins every second, each toss lands on $k=8$ with $P(121,8)=3.384481\times10^{-25}$. The tosses are independent, so the number of tosses until the first success is geometric with mean $1/P$:
+\paragraph{(h) Waiting for 8 heads.} At $N$ coins per second, i.e.\ one toss of all $121$ coins every second, each toss lands on $k=8$ with $P(121,8)=3.384481\times10^{-25}$. The number of independent tosses until the first success is geometric with mean $1/P$:
 \begin{equation}
 \langle t\rangle=\frac{1}{P(121,8)}=2.9547\times10^{24}\ \text{s}=(6.791\pm0.010)\times10^{6}\ \text{ages of the Universe},
 \end{equation}
-taking the age of the Universe as $13.787\pm0.020$\,Gyr $=4.351\times10^{17}$\,s (Planck 2018); its uncertainty is the only one in the result. Reading ``only 8 heads'' as ``at most 8 heads'' hardly changes it: $P(k\le8)=3.637227\times10^{-25}$ and $\langle t\rangle=2.749\times10^{24}$\,s $\approx6.3\times10^{6}$ ages of the Universe. Such an ordered state is allowed but never observed in practice.
+with the age of the Universe $13.787\pm0.020$\,Gyr $=4.351\times10^{17}$\,s (Planck 2018), the only uncertainty in the result. Reading ``only 8 heads'' as ``at most 8 heads'' hardly changes it: $P(k\le8)=3.637227\times10^{-25}$, $\langle t\rangle=2.749\times10^{24}$\,s $\approx6.3\times10^{6}$ ages of the Universe. Such an ordered state is allowed but never observed in practice.
 
-\paragraph{(i) Most probable macrostate against $M\pm10$ heads.} Read as written, with $M=21$, the comparison is with $k=11$ and $k=31$:
-\begin{equation}
-\frac{P(60)}{P(11)}=1.501045\times10^{20},\qquad \frac{P(60)}{P(31)}=2.892531\times10^{6},
-\end{equation}
-($P(60)=0.0720892$, $P(11)=4.80\times10^{-22}$, $P(31)=2.49\times10^{-8}$). The two ratios differ by fourteen orders of magnitude because $k=11$ and $k=31$ lie $49.5$ and $29.5$ heads from the peak, and the suppression grows like the square of that distance. If the intended reading is $N/2\pm10$ instead, the comparison is with the mirror pair $k=51$ and $k=70$ ($51+70=N$, same $\Omega$), and the peak is only $4.399168$ times more likely. The conclusion is the same in both readings, only its strength changes: the peak is always the most probable macrostate, overwhelmingly so against states far from $N/2$ and only by a small factor against states within $\sim2\sigma$ ($\sigma=\sqrt N/2=5.5$).
+\paragraph{(i) Most probable macrostate against $M\pm10$ heads.} Read as written, with $M=21$, the comparison is with $k=11$ and $k=31$: $P(60)/P(11)=1.501045\times10^{20}$ and $P(60)/P(31)=2.892531\times10^{6}$ ($P(60)=0.0720892$, $P(11)=4.80\times10^{-22}$, $P(31)=2.49\times10^{-8}$). The ratios differ by fourteen orders of magnitude because $k=11$ and $31$ lie $49.5$ and $29.5$ heads from the peak, and the suppression grows like the square of that distance. In the reading $N/2\pm10$, the comparison is with the mirror pair $k=51$, $70$ (same $\Omega$), and the peak is only $4.399168$ times more likely. Both readings agree: the peak is always the most probable macrostate, overwhelmingly against states far from $N/2$, only by a small factor within $\sim2\sigma$ ($\sigma=5.5$).
