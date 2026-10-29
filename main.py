@@ -49,7 +49,7 @@ def plot_probability_distribution(path: Path = FIGURES / "probability_distributi
 
 
 def part1(run_benchmark: bool) -> None:
-    print("=== Part 1a: microstates of N = 7 coins (1 = heads) ===")
+    print("=== Part 1a: microstates of N = 7 coins (H = heads, T = tails, coin 0 first) ===")
     for k, states in enumerate(macrostates_table(7)):
         print(f"k = {k}   Omega = {len(states):2d}   " + " ".join(states))
     print(f"total = {sum(macrostate_counts(7))} = 2^7")

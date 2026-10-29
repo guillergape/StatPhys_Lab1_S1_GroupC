@@ -7,6 +7,7 @@ import pytest
 from src.combinatorics import ln_omega
 from src.thermodynamics import (K_B, delta_entropy, delta_entropy_near_peak, interval_probability,
                                 interval_probability_gaussian, ln_omega_small_k, ln_tail_probability,
+                                tail_probability_exact,
                                 peak_probability, probability, solve_part2_k)
 
 
@@ -56,3 +57,18 @@ def test_thermodynamic_limit_answers():
     assert r["2g_dS_JK"] == pytest.approx(K_B * 1e23 * math.log(2), rel=1e-9)
     assert r["2a_log10_P30"] == pytest.approx(-1e23 * math.log10(2), rel=1e-9)
     assert r["2i_ratio_half_N_pm10"] == pytest.approx(1.0, abs=1e-15)
+
+
+def test_tail_probability_exact_sum():
+    # N = 121: |k - 60.5| >= 1.21 leaves out only k = 60, 61
+    assert tail_probability_exact(121, 1.21) == pytest.approx(1 - probability(121, 60) - probability(121, 61))
+    assert tail_probability_exact(121, 0) == 1.0
+    assert tail_probability_exact(4, 2) == pytest.approx(2 / 16)  # k = 0 or 4
+
+
+def test_tail_probability_odd_n_lattice():
+    # odd N: distances are half-integers, so d = 1.21 must count from 1.5, not 1.21 (review of PR #7)
+    for d, rel in ((1.21, 1e-3), (3.0, 1e-3), (10.0, 1e-2)):  # the old cutoff was 5 % off at d = 1.21
+        assert math.exp(ln_tail_probability(121, d)) == pytest.approx(tail_probability_exact(121, d), rel=rel)
+    for N in (121, 10**4):
+        assert ln_tail_probability(N, 0) == 0.0  # P(|k - N/2| >= 0) = 1
