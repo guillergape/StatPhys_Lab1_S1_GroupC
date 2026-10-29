@@ -1,13 +1,18 @@
 \documentclass[11pt,a4paper]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage{lmodern}
+\usepackage{lmodern} % scalable T1 fonts: microtype's font expansion fails on bitmap cm fonts
 \usepackage{amsmath,amssymb,amsfonts,bm}
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{microtype}
 \usepackage{geometry}
 \geometry{a4paper, margin=2.5cm, top=2.8cm, bottom=2.8cm}
+% let figures and tables share pages with text instead of leaving gaps
+\renewcommand{\topfraction}{0.85}
+\renewcommand{\bottomfraction}{0.7}
+\renewcommand{\textfraction}{0.1}
+\renewcommand{\floatpagefraction}{0.8}
 \usepackage[numbers,sort&compress]{natbib}
 \usepackage{hyperref}
 \hypersetup{
@@ -25,18 +30,21 @@
 \date{\today}
 
 \begin{document}
+\pagenumbering{roman}
 \maketitle
+\thispagestyle{empty}
 
 \begin{abstract}
-We investigate the microscopic foundations of statistical mechanics and the emergence of macroscopic thermodynamic behavior using an idealized binary system of $N$ unbiased, independent particles (two-state model isomorphic to spin-$1/2$ paramagnetic dipoles and binary lattice gases). The accessible phase space expands exponentially as $2^N$, exhibiting a fundamental tension between microscopic reversibility and macroscopic irreversibility. We implement and evaluate two complementary computational paradigms: (i) full bitwise microstate enumeration with constant-memory bit-shifting and vectorized popcounts, measuring exact state distributions up to a computational frontier of $N_{\max} = 40$ under a strict 5-minute wall-clock constraint; and (ii) log-space combinatorics based on the log-Gamma function ($\ln\Gamma$), overcoming IEEE-754 64-bit floating-point overflow ($N > 1029$), complemented by Stirling/Gaussian asymptotics to reach macroscopic scales ($N \sim 10^{23}$). For a team-specific system size of $N = 100 + M$, we compute macrostate multiplicities $\Omega(N, k)$, probability profiles, and Boltzmann entropy differences $\Delta S = k_B \ln[\Omega(k_1)/\Omega(k_2)]$. In accordance with the de~Moivre--Laplace limit, relative macroscopic fluctuations decay as $\sigma/N \propto 1/\sqrt{N}$, confining the system to an overwhelmingly probable equilibrium state. Finally, recurrence times for low-entropy configurations demonstrate that spontaneous violations of the Second Law of Thermodynamics are not dynamically prohibited, but statistically impossible on cosmological timescales.
+We study a system of $N$ fair, independent coins, the simplest two-state model of statistical mechanics (isomorphic to a spin-$1/2$ paramagnet or a binary lattice gas). Two computational routes are used: (i) full bitwise enumeration of the $2^N$ microstates with constant memory, which reaches $N_{\max}=40$ within a 5-minute wall-clock limit; and (ii) log-space combinatorics with the log-Gamma function, which avoids the float64 overflow of $\Omega$ beyond $N=1029$ and is complemented by Stirling/Gaussian asymptotics for $N\sim10^{23}$. For our team size $N=100+M=121$ we compute macrostate probabilities, interval probabilities and Boltzmann entropy differences $\Delta S=k_B\ln[\Omega(k_1)/\Omega(k_2)]$. Relative fluctuations decay as $\sigma/N=1/(2\sqrt N)$, and the waiting times of ordered states show that entropy decreases are allowed but, for macroscopic $N$, never observed: the statistical Second Law becomes deterministic.
 \end{abstract}
 
 \vspace{0.5em}
 \noindent\textbf{Keywords:} Statistical mechanics, microstates, macrostate distribution, Boltzmann entropy, de~Moivre--Laplace theorem, thermodynamic limit.
 
-\noindent\textbf{Source Code \& Audit Repository:} \url{https://github.com/guillergape/StatPhys_Lab1_S1_GroupC}
+\noindent\textbf{Source code and AI audit log:} \url{https://github.com/guillergape/StatPhys_Lab1_S1_GroupC}
 
-\vspace{1.5em}
+\newpage
+\pagenumbering{arabic}
 
 % ==============================================================================
 % SECTION 1: INTRODUCTION & OBJECTIVES
@@ -44,68 +52,19 @@ We investigate the microscopic foundations of statistical mechanics and the emer
 \section{Introduction \& Objectives}
 \label{sec:intro}
 
-Statistical mechanics bridges the deterministic microscopic laws governing individual particles and the phenomenological, macroscopic laws of thermodynamics. While classical thermodynamics operates through bulk state variables such as temperature $T$, pressure $P$, volume $V$, and internal energy $U$, statistical mechanics demonstrates that these quantities represent statistical averages over a colossal number of microscopic configurations.
-
-\subsection{Theoretical Foundations}
-Consider an isolated system composed of $N$ distinguishable, non-interacting binary units, where each unit can occupy one of two discrete states, conventionally labeled as heads ($\sigma_i = 1$) or tails ($\sigma_i = 0$). This simple model serves as the archetypal paradigm for diverse physical systems, including:
-\begin{itemize}
-    \item Non-interacting spin-$1/2$ paramagnets in an external magnetic field $B$, where magnetic moments point parallel ($\mu$) or antiparallel ($-\mu$) to the field;
-    \item Lattice gases with site occupancy numbers $n_i \in \{0, 1\}$;
-    \item Two-level quantum systems in thermal equilibrium.
-\end{itemize}
-
-A \textbf{microstate} $\bm{\sigma} = (\sigma_1, \sigma_2, \dots, \sigma_N) \in \{0, 1\}^N$ specifies the precise microscopic configuration of every individual degree of freedom. For $N$ independent entities, the total number of accessible microstates in phase space is:
+Consider $N$ distinguishable, non-interacting coins, each heads ($\sigma_i=1$) or tails ($\sigma_i=0$). A \textbf{microstate} $\bm{\sigma}=(\sigma_1,\dots,\sigma_N)\in\{0,1\}^N$ fixes every coin; there are $2^N$ of them and, by the fundamental postulate, each has probability $2^{-N}$. A \textbf{macrostate} is fixed only by the number of heads $k=\sum_i\sigma_i\in\{0,\dots,N\}$; its multiplicity and probability are
 \begin{equation}
-    \Omega_{\text{total}} = 2^N.
-    \label{eq:total_microstates}
-\end{equation}
-Under the \textit{Fundamental Postulate of Statistical Mechanics}, an isolated system in thermodynamic equilibrium is equally likely to be found in any of its accessible microstates. Thus, for an unbiased coin system, each individual microstate carries an identical a priori probability:
-\begin{equation}
-    P(\bm{\sigma}) = \frac{1}{\Omega_{\text{total}}} = \frac{1}{2^N}.
-\end{equation}
-
-Conversely, a \textbf{macrostate} is characterized exclusively by coarse-grained, macroscopic observables. For our system, the natural macrostate descriptor is the total number of heads $k$:
-\begin{equation}
-    k = \sum_{i=1}^{N} \sigma_i, \qquad k \in \{0, 1, \dots, N\}.
-\end{equation}
-The number of distinct microstates corresponding to a given macrostate $k$ defines its \textbf{multiplicity} (or thermodynamic weight) $\Omega(N, k)$, given by the binomial coefficient:
-\begin{equation}
-    \Omega(N, k) = \binom{N}{k} = \frac{N!}{k!\,(N - k)!}.
+    \Omega(N,k)=\binom{N}{k}=\frac{N!}{k!\,(N-k)!},\qquad P(N,k)=\frac{\Omega(N,k)}{2^N},
     \label{eq:binomial_multiplicity}
 \end{equation}
-Consequently, the probability of observing the macrostate $k$ upon random sampling is:
+and its Boltzmann entropy is $S(N,k)=k_B\ln\Omega(N,k)$, with $k_B=1.380649\times10^{-23}$\,J/K. For $N\to\infty$ the de~Moivre--Laplace theorem turns the binomial into a Gaussian,
 \begin{equation}
-    P(N, k) = \frac{\Omega(N, k)}{2^N} = \binom{N}{k} 2^{-N}.
-    \label{eq:macrostate_probability}
-\end{equation}
-
-The connection to macroscopic thermodynamics is established via Ludwig Boltzmann's entropy postulate:
-\begin{equation}
-    S(N, k) = k_B \ln \Omega(N, k),
-    \label{eq:boltzmann_entropy}
-\end{equation}
-where $k_B = 1.380649 \times 10^{-23}\,\text{J}\cdot\text{K}^{-1}$ is the Boltzmann constant. In statistical mechanics, entropy is directly proportional to the logarithmic volume of accessible phase space associated with a macrostate. The principle of maximum entropy (and hence the Second Law of Thermodynamics) states that an unconstrained system evolves toward the macrostate with the highest multiplicity, which corresponds to the state of maximum molecular disorder.
-
-In the \textbf{thermodynamic limit} ($N \to \infty$ or $N \sim 10^{23}$ particles), the central limit theorem (specifically the de~Moivre--Laplace theorem) dictates that the discrete binomial distribution converges asymptotically to a continuous Gaussian:
-\begin{equation}
-    \Omega(N, k) \simeq 2^N \sqrt{\frac{2}{\pi N}} \exp\left[ -\frac{2\,(k - N/2)^2}{N} \right],
+    \Omega(N,k)\simeq2^N\sqrt{\frac{2}{\pi N}}\exp\!\left[-\frac{2\,(k-N/2)^2}{N}\right],
     \label{eq:gaussian_limit}
 \end{equation}
-with mean $\mu = N/2$ and standard deviation $\sigma = \sqrt{N}/2$. Although the absolute spread $\sigma \propto \sqrt{N}$ increases with system size, the relative fluctuation scale:
-\begin{equation}
-    \frac{\sigma}{N} = \frac{1}{2\sqrt{N}} \xrightarrow[N \to \infty]{} 0
-\end{equation}
-diminishes to zero. For macroscopic systems ($N \sim 10^{23}$), relative fluctuations are suppressed to $\sim 10^{-12}$, transforming statistical probabilities into deterministic physical certainties.
+of mean $N/2$ and width $\sigma=\sqrt N/2$: the absolute spread grows, but the relative one, $\sigma/N=1/(2\sqrt N)$, vanishes ($\sim10^{-12}$ for $N\sim10^{23}$).
 
-\subsection{Laboratory Objectives}
-The primary objective of this experimental and computational investigation is to explore the transition from discrete microscopic counting to macroscopic thermodynamic laws. Specifically, we set out to:
-\begin{enumerate}
-    \item \textbf{Exact Bitwise Microstate Enumeration:} Implement a constant-memory generator utilizing bitwise arithmetic and popcount operations to enumerate all $2^N$ microstates for small systems ($N = 7$), verify multiplicities against Pascal's triangle, and experimentally determine the maximum system size $N_{\max}$ achievable within a 5-minute wall-clock threshold.
-    \item \textbf{Log-Space Combinatorics and Overflow Bypass:} Formulate a numerically stable evaluation of $\ln\Omega(N, k)$ using the log-Gamma function ($\ln\Gamma$) to compute macrostate distributions for large $N$ ($N = 20, 50, 80, 100$) where standard 64-bit floating-point variables experience catastrophic numerical overflow ($N > 1029$).
-    \item \textbf{Probabilities and Macrostate Thermodynamics:} For a group-specific system size $N = 100 + M$ (where $M$ is derived from the harmonic mean of the team members' university IDs), calculate exact macrostate probabilities, central symmetric confidence intervals, and evaluate Boltzmann entropy differences $\Delta S = k_B \Delta(\ln\Omega)$.
-    \item \textbf{Statistical Irreversibility and the Second Law:} Quantify the expected recurrence time required to spontaneously produce an ordered low-entropy state ($k = 8$) under continuous physical coin-tossing, comparing the result with the cosmological age of the Universe ($\tau_U \approx 13.8 \times 10^9\,\text{yr}$).
-    \item \textbf{Thermodynamic Limit Asymptotics:} Apply Stirling's approximation to analytically evaluate the system's behavior as $N \to 10^{23}$, demonstrating the mathematical necessity of the Second Law of Thermodynamics in macroscopic physics.
-\end{enumerate}
+Following the lab manual \cite{tribaldos}, we enumerate the microstates (Part~1a,~b, Section~\ref{sec:microstates}), compute $\Omega(N,k)$ in log space up to $N\sim10^{23}$ (Part~1c--e), and, for $N=100+M$, compute probabilities, entropy differences and waiting times and discuss the Second Law and the limit $N\to\infty$ (Part~2, Section~\ref{sec:thermodynamics}).
 
 % ==============================================================================
 % SECTION 2: METHODOLOGY & COLLABORATIVE WORKFLOW
@@ -113,51 +72,15 @@ The primary objective of this experimental and computational investigation is to
 \section{Methodology \& Collaborative Workflow}
 \label{sec:methodology}
 
-Scientific computing requires strict adherence to reproducible environments, modular software engineering, version-controlled collaboration, and exhaustive verification. Our methodology integrates modern industry standards with academic rigor.
+\textbf{Environment.} The Conda environment \texttt{statphys\_lab1} (\texttt{environment.yml}) pins Python 3.11 (for \texttt{int.bit\_count}), NumPy $\ge2.0$ (for \texttt{bitwise\_count}), SciPy $\ge1.10$ (for \texttt{gammaln}), Matplotlib $\ge3.7$ (vector PDF figures) and pytest $\ge7.0$.
 
-\subsection{Reproducible Computational Environment}
-To eliminate platform discrepancies across team workstations (running macOS, Linux, and Windows), all computational analyses are executed within an isolated, deterministic Conda environment named \texttt{statphys\_lab1}. The complete environment specification is codified in \texttt{environment.yml}:
-\begin{itemize}
-    \item \textbf{Python 3.11.9}: Serves as the base runtime, providing native support for \texttt{int.bit\_count()} and optimized integer arithmetic.
-    \item \textbf{NumPy ($\ge 1.24$)}: Utilized for high-performance vectorized operations, contiguous memory arrays (\texttt{numpy.arange}), and C-accelerated bitwise counting (\texttt{numpy.bitwise\_count}).
-    \item \textbf{SciPy ($\ge 1.10$)}: Provides the specialized logarithmic gamma function \texttt{scipy.special.gammaln} for array-wide log-space combinatorics.
-    \item \textbf{Matplotlib ($\ge 3.7$)}: Configured for the publication-quality generation of vector graphic figures (\texttt{.pdf}) with explicit typographical scaling.
-    \item \textbf{Pytest ($\ge 7.0$)}: Automated unit testing framework executed across all modules prior to code integration.
-\end{itemize}
+\textbf{Code.} The package \texttt{src/} has one module per topic (\texttt{microstates.py}: enumeration; \texttt{combinatorics.py}: $\ln\Omega$; \texttt{thermodynamics.py}: probabilities, entropy, large $N$), coded against function signatures agreed in \texttt{PLAN.md} before any branch started. \texttt{main.py} runs every question in order, prints the results quoted in this report and regenerates both figures.
 
-\subsection{Modular Architecture \& Shared Interfaces}
-The codebase is decoupled into distinct modules under \texttt{src/}, each adhering to strict, pre-agreed type-annotated signatures defined in \texttt{PLAN.md}:
-\begin{itemize}
-    \item \texttt{src/microstates.py}: Defines \texttt{microstates(N: int) -> Iterator[int]} and \texttt{macrostate\_counts(N: int) -> list[int]}. Implements both pure-Python bitwise generation and multi-threaded block-vectorized chunking for execution benchmarks.
-    \item \texttt{src/combinatorics.py}: Defines \texttt{ln\_omega(N: int, k: int) -> float} based on \texttt{math.lgamma}, vectorized array utilities, and asymptotic Gaussian approximations.
-    \item \texttt{src/thermodynamics.py}: Defines functions for calculating the team parameter $N = 100 + M$, macrostate probabilities \texttt{probability(N, k)}, cumulative interval probabilities \texttt{interval\_probability(N, k1, k2)}, and entropy differences \texttt{delta\_entropy(N, k1, k2)}.
-    \item \texttt{main.py}: Master pipeline executing all computational routines sequentially, printing validated numerical tables and rendering vector plots directly to \texttt{report/figures/}.
-\end{itemize}
+\textbf{Git workflow.} The lab was split into eleven phases with an owner each. Every phase was developed on its own feature branch (e.g.\ \texttt{feature/log-combinatorics}) and merged into \texttt{main} only through a pull request approved by a designated teammate; nobody commits to \texttt{main} directly.
 
-\subsection{Version Control, Feature Branching, and Peer Review}
-Collaboration is governed by a distributed Git workflow hosted on GitHub. Direct commits to the \texttt{main} branch are strictly restricted. Instead, a structured feature-branch workflow is enforced:
-\begin{enumerate}
-    \item Work is divided into discrete, ordered phases allocated among team members.
-    \item Each member works in an isolated branch (e.g., \texttt{feature/bitwise-enumeration}, \texttt{feature/log-combinatorics}, \texttt{feature/latex-report}).
-    \item Cross-review protocol: Once a phase is complete, a formal Pull Request (PR) is opened against \texttt{main}. A designated teammate reviews the implementation against analytical benchmarks and verifies that all unit tests pass before approval and merge.
-\end{enumerate}
+\textbf{Testing.} The \texttt{tests/} suite checks the invariants $\sum_k\Omega(N,k)=2^N$, $\Omega(N,k)=\Omega(N,N-k)$, $\Omega(N,0)=\Omega(N,N)=1$, $\Omega(N,1)=N$, and $e^{\ln\Omega}$ against the exact \texttt{math.comb(N, k)} for all $k$ and $N\le100$ (relative error $<10^{-11}$); every new function was added with its tests.
 
-\subsection{Verification and Unit Testing Suite}
-Reproducibility is enforced via automated test suites located in \texttt{tests/}. Every algorithm is validated against theoretical invariants:
-\begin{itemize}
-    \item \textbf{Conservation of States:} Verification that $\sum_{k=0}^{N} \Omega(N, k) \equiv 2^N$.
-    \item \textbf{Reflection Symmetry:} Invariance under heads-tails exchange, $\Omega(N, k) \equiv \Omega(N, N - k)$.
-    \item \textbf{Exact Comparison:} Comparison of $\exp[\ln\Omega(N, k)]$ against exact arbitrary-precision integer combinatorics (\texttt{math.comb(N, k)}) for all $k \le N \le 100$, confirming a relative error $|e^{\ln\Omega} - \binom{N}{k}|/\binom{N}{k} < 10^{-11}$.
-    \item \textbf{Boundary Limits:} Exact validation at extremities: $\Omega(N, 0) = \Omega(N, N) = 1$ and $\Omega(N, 1) = N$.
-\end{itemize}
-
-\subsection{AI Assistance Governance \& Audit Trail}
-In full compliance with Universidad Carlos III de Madrid academic regulations and Phase 3 of the Laboratory Project Guidelines, artificial intelligence systems (Claude Code, GitHub Copilot, and Google Antigravity) are utilized strictly as collaborative development tools. To maintain complete academic integrity, every interaction is audited in \texttt{AI\_STATEMENT.md}, recording:
-\begin{enumerate}
-    \item The verbatim prompt submitted by the team member;
-    \item The code, LaTeX, or documentation synthesized by the assistant;
-    \item The rigorous verification procedures, modifications, and unit tests independently executed by the authors.
-\end{enumerate}
+\textbf{AI assistance.} Claude Code, GitHub Copilot and Google Antigravity were used as assistants. Every query is logged in \texttt{AI\_STATEMENT.md} (prompt, what was generated, what the team changed and how it was verified); Appendix~\ref{sec:ai_statement} summarises it.
 
 % ==============================================================================
 % SECTION 3: COMPUTATIONAL ANALYSIS OF MICROSTATES
@@ -184,63 +107,84 @@ In full compliance with Universidad Carlos III de Madrid academic regulations an
 \section{Conclusion}
 \label{sec:conclusion}
 
-This laboratory practice establishes an exhaustive, mathematically rigorous, and computationally verified bridge between microscopic states and macroscopic thermodynamics for a binary system of $N$ unbiased particles. Our key findings across all phases are synthesized as follows:
+Full enumeration is limited by time, not memory: generating states on the fly keeps memory constant, but the work doubles with each coin, so 5 minutes reach only $N_{\max}=36$ (i7) to $40$ (M4 Max), and a $180\times$ speed-up buys $7.5$ coins. Computing $\ln\Omega$ with log-Gamma avoids the float64 overflow of $\Omega$ at $N=1030$ and stays accurate up to $N\sim10^{13}$; Stirling's formula covers $N\sim10^{23}$. For our $N=121$ the probability concentrates around $N/2$ ($93.14\,\%$ within $\pm10$ heads, $99.98\,\%$ within $\pm20$ tails), entropy decreases of $1.5$--$10\,k_B$ are ordinary fluctuations, and a state with 8 heads takes $\approx6.8\times10^6$ ages of the Universe. No result contradicts the Second Law: entropy decreases have relative probability $e^{\Delta S/k_B}$, frequent for small $N$ but suppressed as $e^{-\mathcal O(N)}$ for $N\sim10^{23}$, where the relative width $\sigma/N\sim10^{-12}$ vanishes and the statistical law becomes deterministic.
 
-\begin{enumerate}
-    \item \textbf{Microscopic Enumeration and Computational Boundaries (Part 1 a, b):} 
-    By employing bitwise representation ($s \in [0, 2^N-1]$) and popcount algorithms, we confirmed the exact multiplicity structure of $N=7$ ($2^7 = 128$ states), reproducing the binomial coefficients of Pascal's row 7. Benchmarking wall-clock execution and RAM under a strict 5-minute threshold revealed that the absolute constraint on microstate counting is CPU runtime ($O(2^N)$ time complexity), not memory: generating states on the fly preserves constant RAM ($\sim 71$\,MB). Even with multi-threaded vectorization evaluating states at $2.3$\,ns per state, the computational frontier halts sharply at $N_{\max} = 36$ ($156.2$\,s), as $N=37$ exceeds 5 minutes ($310$\,s) and $N=100$ would require $10^{14}$ years.
-
-    \item \textbf{Log-Space Combinatorics and Overcoming Numerical Overflow (Part 1 c--e):}
-    Direct evaluation of factorials or $\Omega(N, k)$ in IEEE 754 float64 arithmetic overflows at $N = 1030$ ($\ln\Omega \approx 710.25 > \ln 1.8 \times 10^{308}$). Formulating combinatorics in logarithmic space via the log-Gamma function ($\ln\Gamma(n+1) = \ln n!$) enabled stable calculation across arbitrary scales with relative errors below $10^{-11}$. The macrostate distributions for $N = 20, 50, 80, 100$ quantitatively verify that although the absolute standard deviation $\sigma = \sqrt{N}/2$ expands with size, the relative fluctuation scale $\sigma/N = 1/(2\sqrt{N})$ narrows rapidly.
-
-    \item \textbf{Probability Mass Concentration in Group System $N = 121$ (Part 2 a--d):}
-    For our team size $N = 100 + M = 121$ (derived from the harmonic average $M = 21$ of members' NIAs: 69, 22, 9, 45), the odd parity introduces a degenerate modal peak at $k = 60, 61$ with $P(60) = 0.0721$. Probability evaluations demonstrate extreme central concentration: while a moderate deviation of 30 heads has vanishing probability ($P(30) = 8.49 \times 10^{-9}$), a central window of $\pm 10$ heads ($16.4\%$ of states) concentrates $93.14\%$ of the total probability mass, and $\pm 20$ tails captures $99.98\%$.
-
-    \item \textbf{Boltzmann Entropy and Recurrence Waiting Times (Part 2 e--i):}
-    Boltzmann's relation $S = k_B \ln\Omega$ confirms that spontaneous deviations from equilibrium correspond to measurable entropy penalties: moving 10 heads from the peak reduces entropy by $\Delta S = -1.48\,k_B$ (likelihood ratio $0.227$), while an excursion of 25 heads costs $-10.12\,k_B$ ($P / P_{\text{peak}} \approx 4.03 \times 10^{-5}$). For highly ordered configurations ($k=8$), the expected waiting time at continuous tossing rates is $\langle t \rangle = 2.95 \times 10^{24}$\,s $\approx 6.79 \times 10^6$ times the age of the Universe ($\tau_U = 13.8$\,Gyr).
-
-    \item \textbf{The Second Law and the Thermodynamic Limit $N \sim 10^{23}$ (Part 2 j, k):}
-    Our results resolve the apparent paradox between reversible microdynamics and irreversible thermodynamics. The Second Law does not dynamically prohibit entropy reductions; rather, spontaneous decreases are routine microscopic fluctuations in small assemblies ($N=121$, appearing every $\sim 28$ hours for $\Delta S = -10.1\,k_B$), but are statistically suppressed by factors of $e^{-\mathcal{O}(N)} \sim 10^{-10^{22}}$ at Avogadro scales. In the thermodynamic limit, relative fluctuations diminish to $\sim 10^{-12}$, transforming statistical probability into deterministic macroscopic law.
-\end{enumerate}
+\begin{thebibliography}{1}
+\bibitem{tribaldos} V.~Tribaldos, \emph{Microstates of a System of Coins: First Laboratory Practice}, Statistical Physics, Universidad Carlos III de Madrid, 2026.
+\end{thebibliography}
 
 % ==============================================================================
-% APPENDIX: AI COLLABORATION & AUDIT STATEMENT
+% APPENDICES
 % ==============================================================================
+\clearpage
 \appendix
-\section{AI Collaboration \& Audit Statement}
-\label{sec:ai_statement}
-
-In accordance with Phase 3 of the Laboratory Project Guidelines, artificial intelligence platforms (Anthropic Claude Code, GitHub Copilot, and Google Antigravity) were utilized as interactive development copilots throughout this project.
-
-\subsection{Collaborative Protocol and Quality Assurance}
-To preserve total scientific and pedagogical integrity, all interactions followed strict governance principles:
-\begin{itemize}
-    \item \textbf{Supervised Code Synthesis:} AI assistants drafted boilerplate interfaces, vector graphic configurations, and LaTeX formatting under direct team instructions. All theoretical formulations were directed by the team.
-    \item \textbf{Automated Test Coverage:} Every algorithmic routine in \texttt{src/} was validated against independent test suites in \texttt{tests/} executing theoretical invariants (conservation of states, heads-tails reflection symmetry, exact integer agreement).
-    \item \textbf{Audit Logging:} Every prompt, generated output, human modification, and verification result was recorded chronologically in \texttt{AI\_STATEMENT.md}.
-\end{itemize}
-
-\subsection{Audit Trail Summary}
-Table~\ref{tab:ai_audit} summarizes the logged AI sessions across all phases of the project.
+\section{Enumeration data (Part 1 a, b)}
+\label{app:n7}
 
 \begin{table}[htbp]\centering\small
-\caption{Summary of AI collaborative sessions recorded in \texttt{AI\_STATEMENT.md}.}\label{tab:ai_audit}
-\begin{tabular}{@{}cllll@{}}
+\caption{All microstates of $N=7$ coins grouped by macrostate (H = heads, T = tails, coin 0 first).}\label{tab:n7}
+\begin{tabular}{@{}p{0.17\textwidth}p{0.68\textwidth}r@{}}
 \toprule
-Session & Phase / Focus & Team Member & Tool / Model & Key Verification \\
+Macrostate & Microstates & $\Omega(7,k)$ \\
 \midrule
-1--4 & Project Setup \& Layout & G.~Garc\'ia & Claude Opus 5.5 & Conda environment, repo skeleton \\
-5--7 & Work Plan \& Branching & G.~Garc\'ia & Claude Opus 5.5 & Matrix of phases, shared signatures \\
-8 & Phase 2: Bitwise Enumeration & G.~Garc\'ia & Claude Opus 5.5 & $N=7$ table, $N_{\max}=36$ benchmark \\
-9 & Phase 3: Log Combinatorics & A.~M\'armol & Claude Opus 5.5 & $\ln\Gamma$ error $<10^{-11}$, PDF figure \\
-10 & Phase 5: Report I & C.~Cordero & Gemini 3.8 Flash & Document structure, theory, workflow \\
-11 & Phase 6: Entropy & A.~M\'armol & Claude Opus 5.5 & Odd-$N$ peak, $\tau \approx 6.8\times 10^6\,\tau_U$ \\
-12 & Phase 7: Large-$N$ Limit & A.~M\'armol & Claude Opus 5.5 & Stirling expansions, lattice correction \\
-13 & Phase 9: Report II & C.~Cordero & Gemini 3.8 Flash & Assembly, conclusion, audit table \\
+7 heads, 0 tails & \texttt{HHHHHHH} & 1 \\
+6 heads, 1 tail & \texttt{HHHHHHT, HHHHHTH, HHHHTHH, HHHTHHH, HHTHHHH, HTHHHHH, THHHHHH} & 7 \\
+5 heads, 2 tails & \texttt{HHHHHTT, HHHHTHT, HHHTHHT, HHTHHHT, HTHHHHT, THHHHHT, HHHHTTH, HHHTHTH, HHTHHTH, HTHHHTH, THHHHTH, HHHTTHH, HHTHTHH, HTHHTHH, THHHTHH, HHTTHHH, HTHTHHH, THHTHHH, HTTHHHH, THTHHHH, TTHHHHH} & 21 \\
+4 heads, 3 tails & \texttt{HHHHTTT, HHHTHTT, HHTHHTT, HTHHHTT, THHHHTT, HHHTTHT, HHTHTHT, HTHHTHT, THHHTHT, HHTTHHT, HTHTHHT, THHTHHT, HTTHHHT, THTHHHT, TTHHHHT, HHHTTTH, HHTHTTH, HTHHTTH, THHHTTH, HHTTHTH, HTHTHTH, THHTHTH, HTTHHTH, THTHHTH, TTHHHTH, HHTTTHH, HTHTTHH, THHTTHH, HTTHTHH, THTHTHH, TTHHTHH, HTTTHHH, THTTHHH, TTHTHHH, TTTHHHH} & 35 \\
+3 heads, 4 tails & \texttt{HHHTTTT, HHTHTTT, HTHHTTT, THHHTTT, HHTTHTT, HTHTHTT, THHTHTT, HTTHHTT, THTHHTT, TTHHHTT, HHTTTHT, HTHTTHT, THHTTHT, HTTHTHT, THTHTHT, TTHHTHT, HTTTHHT, THTTHHT, TTHTHHT, TTTHHHT, HHTTTTH, HTHTTTH, THHTTTH, HTTHTTH, THTHTTH, TTHHTTH, HTTTHTH, THTTHTH, TTHTHTH, TTTHHTH, HTTTTHH, THTTTHH, TTHTTHH, TTTHTHH, TTTTHHH} & 35 \\
+2 heads, 5 tails & \texttt{HHTTTTT, HTHTTTT, THHTTTT, HTTHTTT, THTHTTT, TTHHTTT, HTTTHTT, THTTHTT, TTHTHTT, TTTHHTT, HTTTTHT, THTTTHT, TTHTTHT, TTTHTHT, TTTTHHT, HTTTTTH, THTTTTH, TTHTTTH, TTTHTTH, TTTTHTH, TTTTTHH} & 21 \\
+1 head, 6 tails & \texttt{HTTTTTT, THTTTTT, TTHTTTT, TTTHTTT, TTTTHTT, TTTTTHT, TTTTTTH} & 7 \\
+0 heads, 7 tails & \texttt{TTTTTTT} & 1 \\
+\midrule
+Total & & 128 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\noindent Full prompt transcripts, generated code diffs, and verification steps are maintained in the repository: \url{https://github.com/guillergape/StatPhys_Lab1_S1_GroupC/blob/main/AI_STATEMENT.md}.
+\begin{table}[htbp]\centering\small
+\caption{Wall-clock time of the full enumeration with \texttt{macrostate\_counts\_fast} (one run per $N$; the time per state varies by about $\pm10\%$ between runs).}\label{tab:benchmark}
+\begin{tabular}{@{}rrrr@{}}
+\toprule
+$N$ & $2^N$ & Time (s) & Time per state (ns) \\
+\midrule
+30 & $1.07\times10^{9}$ & 3.3 & 3.0 \\
+31 & $2.15\times10^{9}$ & 5.5 & 2.6 \\
+32 & $4.29\times10^{9}$ & 10.9 & 2.5 \\
+33 & $8.59\times10^{9}$ & 23.6 & 2.7 \\
+34 & $1.72\times10^{10}$ & 41.4 & 2.4 \\
+35 & $3.44\times10^{10}$ & 85.5 & 2.5 \\
+36 & $6.87\times10^{10}$ & 156.2 & 2.3 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\input{sections/appendix-large-n.tex}
+
+\section{AI Collaboration \& Audit Statement}
+\label{sec:ai_statement}
+
+Claude Code (Anthropic), GitHub Copilot and Google Antigravity were used as development assistants. AI tools drafted code, tests and LaTeX under the team's instructions; every generated function is covered by tests in \texttt{tests/}, every number in this report comes from running the code, and each pull request was reviewed by a teammate before merging. Every prompt, generated output, human change and verification is recorded chronologically in \texttt{AI\_STATEMENT.md}; Table~\ref{tab:ai_audit} summarises it.
+
+\begin{table}[htbp]\centering\footnotesize
+\caption{Summary of the AI sessions logged in \texttt{AI\_STATEMENT.md} (entry numbers as in the log; Claude = Claude Code with Claude Opus 5.5, Gemini = Antigravity with Gemini 3.8 Flash).}\label{tab:ai_audit}
+\begin{tabular}{@{}lllll@{}}
+\toprule
+Entries & Phase / focus & Member & Tool & Key verification \\
+\midrule
+1--7 & Setup, work plan, branches & G.~Garc\'ia & Claude & Conda env., shared signatures \\
+8 & Phase 2: bitwise enumeration & G.~Garc\'ia & Claude & $N=7$ table, benchmark \\
+9 & Phase 3: log combinatorics & A.~M\'armol & Claude & $\ln\Gamma$ error $<10^{-11}$ \\
+10 & Phase 4: probabilities & H.~Armenteros & Gemini & sums to 1, exact fractions \\
+11 & Phase 6: entropy & A.~M\'armol & Claude & odd-$N$ peak, waiting time \\
+12--13 & Phase 7: large-$N$ limit & A.~M\'armol & Claude & asymptotics vs exact sums \\
+14, 16, 17, 19 & Reviews of PRs \#4, \#5, \#2, \#8 & A.~M\'armol & Claude & re-measured benchmark \\
+15, 20 & Phases 5, 9: report & C.~Cordero & Gemini & structure, assembly \\
+18 & Phase 8: integration & G.~Garc\'ia & Claude & \texttt{pytest}, \texttt{main.py} \\
+21 & Report shortening & G.~Garc\'ia & Claude & page count, numbers kept \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent Full log: \texttt{AI\_STATEMENT.md} in the repository linked on the title page.
 
 \end{document}
