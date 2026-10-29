@@ -1,9 +1,10 @@
 """Tests for src/microstates.py."""
 
 import math
+import tracemalloc
 
 from src.microstates import (macrostate_counts, macrostate_counts_fast, macrostates_table,
-                             microstates, to_string)
+                             microstates, peak_memory, time_count, to_string)
 
 
 def test_counts_sum_to_2_power_N():
@@ -37,3 +38,13 @@ def test_every_microstate_listed_once():
 def test_bits_to_string():
     assert to_string(0b00101, 5) == "HTHTT"
     assert list(microstates(2)) == [0, 1, 2, 3]
+
+
+def test_timing_and_memory_are_measured_apart():
+    # timing must not run under tracemalloc, which slows pure Python ~9x
+    seen = []
+    time_count(lambda N: seen.append(tracemalloc.is_tracing()), 10)
+    peak_memory(lambda N: seen.append(tracemalloc.is_tracing()), 10)
+    assert seen == [False, True] and not tracemalloc.is_tracing()
+    # one numpy block (2^22 states) costs the same memory whatever N is
+    assert 30 < peak_memory(lambda N: macrostate_counts_fast(N, workers=1), 22) < 200

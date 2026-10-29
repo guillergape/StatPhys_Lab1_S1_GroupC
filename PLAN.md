@@ -9,7 +9,7 @@ Deadline: **Tue 3 Nov 2026** (repo URL + report PDF on Aula Global, −1 point p
 | Guillermo García Pelayo | `guillergape` | GUILLERMO GARCIA PELAYO | Claude Code | Héctor | 69 |
 | Andrés Mármol del Amo | `AndreuwMetal` | AndreuwMetal | Claude Code (Max) | Carlos | 22 |
 | Héctor Armenteros Arauzo | `HectorArmen` | HectorArmen | GitHub Copilot, Antigravity | Guillermo | 09 |
-| Carlos Cordero López | `Carlos8281-progra` | | GitHub Copilot, Antigravity | Andrés | 45 |
+| Carlos Cordero López | `Carlos8281-progra` | Carlos Cordero López | GitHub Copilot, Antigravity | Andrés | 45 |
 
 Fill in your `git config user.name` and your NIA's last two digits in your first PR.
 
@@ -23,7 +23,7 @@ Status is the source of truth for "what's next": `todo` → `done` (set to `done
 | 2 | Bitwise enumeration (Part 1 a, b) | Guillermo | `feature/bitwise-enumeration` | — | Sun 25 Oct | done |
 | 3 | Log-space combinatorics (Part 1 c, d, e) | Andrés | `feature/log-combinatorics` | — | Sun 25 Oct | done |
 | 4 | Probabilities (Part 2 a–d) and N = 100 + M | Héctor | `feature/probabilities` | 3 | Mon 26 Oct | done |
-| 5 | Report I: structure, introduction, methodology | Carlos | `feature/latex-report` | — | Sun 25 Oct | todo |
+| 5 | Report I: structure, introduction, methodology | Carlos | `feature/latex-report` | — | Sun 25 Oct | done |
 | 6 | Entropy and thermodynamic implications (Part 2 e–i) | Andrés | `feature/entropy` | 3, 4 | Tue 27 Oct | done |
 | 7 | Second Law and large-N limit (Part 2 j, k) | Andrés | `feature/large-n` | 4, 6 | Wed 28 Oct | done |
 | 8 | Integration: `main.py` and vector figures | Guillermo | `feature/integration` | 2, 3, 4, 6 | Thu 29 Oct | done |

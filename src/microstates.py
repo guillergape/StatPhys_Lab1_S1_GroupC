@@ -65,26 +65,38 @@ def macrostate_counts_fast(N: int, workers: int | None = None) -> list[int]:
         return sum(pool.map(_count_block, *zip(*bounds))).tolist()
 
 
-def measure(count, N: int) -> tuple[float, float]:
-    """Wall time (s) and peak traced memory (MB) of count(N), main process only."""
-    tracemalloc.start()
+def time_count(count, N: int) -> float:
+    """Wall time (s) of count(N), with nothing else running (no tracemalloc)."""
     t0 = time.perf_counter()
     count(N)
-    t = time.perf_counter() - t0
-    peak = tracemalloc.get_traced_memory()[1] / 1e6
-    tracemalloc.stop()
-    return t, peak
+    return time.perf_counter() - t0
 
 
-def benchmark(count=macrostate_counts_fast, N0: int = 16, budget: float = 300.0) -> list[tuple[int, float, float]]:
-    """Run count(N) for N = N0, N0+1, ... while the next N is predicted to fit in `budget`
-    seconds (time doubles with each extra coin). Returns rows (N, seconds, peak MB) and prints them.
+def peak_memory(count, N: int) -> float:
+    """Peak traced memory (MB) of count(N), main process only.
+
+    Kept apart from time_count because tracemalloc slows pure Python about 9x (one traced
+    allocation per int), which would inflate the timings. For worker processes, measure with workers=1.
     """
+    tracemalloc.start()
+    try:
+        count(N)
+        return tracemalloc.get_traced_memory()[1] / 1e6
+    finally:
+        tracemalloc.stop()
+
+
+def benchmark(count=macrostate_counts_fast, N0: int = 16, budget: float = 300.0) -> list[tuple[int, float]]:
+    """Run count(N) for N = N0, N0+1, ... while the next N is predicted to fit in `budget`
+    seconds (time doubles with each extra coin). Returns rows (N, seconds) and prints them.
+    Memory does not depend on N (states are never stored), so it is measured once, at N0.
+    """
+    print(f"peak memory at N = {N0}: {peak_memory(count, N0):.1f} MB (main process)", flush=True)
     rows, N = [], N0
     while True:
-        t, mb = measure(count, N)
-        rows.append((N, t, mb))
-        print(f"N = {N:2d}   {t:9.3f} s   {t / 2**N * 1e9:6.2f} ns/state   peak {mb:7.1f} MB", flush=True)
+        t = time_count(count, N)
+        rows.append((N, t))
+        print(f"N = {N:2d}   {t:9.3f} s   {t / 2**N * 1e9:6.2f} ns/state", flush=True)
         if 2 * t > budget:
             return rows
         N += 1
