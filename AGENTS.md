@@ -2,10 +2,10 @@
 
 Statistical Physics Lab 1 (UC3M, Section 1 – Group C): N-coin microstates, log-space combinatorics and entropy, in Python + LaTeX. The plan, owners, shared function signatures and the full task of every phase are in `PLAN.md`. Talk to the member in the language they write in; code, comments, commits and the report are in English.
 
-## "Hazme la siguiente fase que me toca" / "do my next phase"
+## "Do my next phase" (in any language)
 
 1. **Sync:** `git fetch origin`. Read `PLAN.md` **from `origin/main`** (`git show origin/main:PLAN.md`), not from the current branch.
-2. **Who is asking:** match `gh api user --jq .login` (if `gh` is installed) or `git config user.name` / `user.email` against the Team table. If the member said their name, use that. If nothing matches, ask "¿quién eres?" and stop.
+2. **Who is asking:** match `gh api user --jq .login` (if `gh` is installed) or `git config user.name` / `user.email` against the Team table. If the member said their name, use that. If nothing matches, ask who they are and stop.
 3. **Which phase:** the member's first phase whose status on `origin/main` is not `done`. If that phase's branch on origin already has `done` in its own `PLAN.md`, it is waiting for review: tell the member to ask their reviewer, and move to their next phase. If its "Needs" phases are not `done` on `main`, say which ones are missing; work on it anyway only if it can be coded against the shared signatures in `PLAN.md` (never edit another phase's files to fill the gap). Tell the member in one line which phase you're starting and why.
 4. **Branch:** `git checkout <branch>` (create it from `origin/main` if it doesn't exist), then `git merge origin/main`. Never commit to `main`.
 5. **Environment:** run everything in the `statphys_lab1` Conda environment (`conda activate statphys_lab1`; create it with `conda env create -f environment.yml` if missing).

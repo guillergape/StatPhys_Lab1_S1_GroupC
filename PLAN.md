@@ -1,6 +1,6 @@
 # Work plan
 
-Deadline: **Tue 3 Nov 2026** (repo URL + report PDF on Aula Global, −1 point per day late). Each member just tells their AI assistant **"hazme la siguiente fase que me toca"**; the procedure it follows is in `AGENTS.md`.
+Deadline: **Tue 3 Nov 2026** (repo URL + report PDF on Aula Global, −1 point per day late). Each member just tells their AI assistant **"do my next phase"**; the procedure it follows is in `AGENTS.md`.
 
 ## Team
 

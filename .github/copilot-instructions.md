@@ -1,1 +1,1 @@
-Follow the instructions in `AGENTS.md` at the repository root and the plan in `PLAN.md`. When a member asks for "la siguiente fase que me toca" / "my next phase", run the procedure in `AGENTS.md` step by step.
+Follow the instructions in `AGENTS.md` at the repository root and the plan in `PLAN.md`. When a member asks for "my next phase" (in any language), run the procedure in `AGENTS.md` step by step.
